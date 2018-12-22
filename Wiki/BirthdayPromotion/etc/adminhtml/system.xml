@@ -18,10 +18,12 @@
                     <label>Enable</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="display_text" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Display Text</label>
-                    <comment>This text will display on the frontend.</comment>
+                <!-- Email Sender -->
+                <field id="email_sender_to" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Email Sender</label>
+                     <source_model>Magento\Config\Model\Config\Source\Email\Identity</source_model>
                 </field>
+                <!-- Email Template -->
                 <field id="email_template" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
                     <label>Email Template</label>
                     <comment>Email template chosen based on theme fallback when "Default" option is selected.</comment>

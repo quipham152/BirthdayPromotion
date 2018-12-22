@@ -3,10 +3,7 @@ namespace Wiki\BirthdayPromotion\Controller\Adminhtml\Xxx;
 
 class Index extends \Magento\Framework\App\Action\Action
 {
-	/**
-    * Recipient email config path
-    */
-    const XML_PATH_EMAIL_RECIPIENT = 'birthdaypromotion/general/email_template';
+    const EMAIL_SENDER = 'birthdaypromotion/general/email_sender_to';
     /**
     * @var \Magento\Framework\Mail\Template\TransportBuilder
     */
@@ -30,6 +27,17 @@ class Index extends \Magento\Framework\App\Action\Action
     * @var \Magento\Framework\Escaper
     */
     protected $_escaper;
+
+    /**
+     * Customer
+     */
+    protected $_customerFactory;
+
+    /**
+     * Current Date
+     */
+    protected $_currentdate;
+    
     /**
     * @param \Magento\Framework\App\Action\Context $context
     * @param \Magento\Framework\Mail\Template\TransportBuilder $transportBuilder
@@ -43,6 +51,8 @@ class Index extends \Magento\Framework\App\Action\Action
         \Magento\Framework\Translate\Inline\StateInterface $inlineTranslation,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Customer\Model\ResourceModel\Customer\CollectionFactory $customerFactory,
+        \Magento\Framework\Stdlib\DateTime\DateTime $currentdate,
         \Magento\Framework\Escaper $escaper
     ) {
         parent::__construct($context);
@@ -50,9 +60,15 @@ class Index extends \Magento\Framework\App\Action\Action
         $this->inlineTranslation = $inlineTranslation;
         $this->scopeConfig = $scopeConfig;
         $this->storeManager = $storeManager;
+        $this->_customerFactory = $customerFactory;
+        $this->_currentdate = $currentdate;
         $this->_escaper = $escaper;
     }
 
+    public function getCustomerCollection()
+    {
+        return $this->_customerFactory->create();
+    }
     /**
     * Post user question
     *
@@ -61,56 +77,47 @@ class Index extends \Magento\Framework\App\Action\Action
     */
     public function execute()
     {
-        $post = $this->getRequest()->getPostValue();
-        
-        // if (!$post) {
-            
-        //     $this->_redirect('*/*/');
-        //     return;
-        // }
-
-        $this->inlineTranslation->suspend();
         try {
             
             $postObject = new \Magento\Framework\DataObject();
-            // $postObject->setData($post);
+            $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
 
+            $customerCollection = $this->getCustomerCollection();
+            $date = $this->_currentdate->gmtDate('Y-m-d');
             $error = false;
 
-            $sender = [
-                'name' => $this->_escaper->escapeHtml('tri'),
-                'email' => $this->_escaper->escapeHtml('qui.nguyen@wiki-solution.com'),
-            ];
+            $templateOptions = array(
+                'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
+                'store' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
+            );
 
             $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-            $transport = $this->_transportBuilder
-            ->setTemplateIdentifier('birthdaypromotion_general_email_template') // this code we have mentioned in the email_templates.xml
-            ->setTemplateOptions(
-                [
-                'area' => \Magento\Framework\App\Area::AREA_ADMINHTML, // this is using frontend area to get the template file
-                'store' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
-                ]
-            )
-            ->setTemplateVars(['data' => $postObject])
-            ->setFrom($sender)
-            ->addTo($this->scopeConfig->getValue(self::XML_PATH_EMAIL_RECIPIENT, $storeScope))
-            ->getTransport();
-            // die('xxx');
-            // var_dump($transport->sendMessage());
-            // die('xxx');
-            $this->inlineTranslation->resume();
-            $this->messageManager->addSuccess(
-                __('Thanks for contacting us with your comments and questions. We\'ll respond to you very soon.')
-            );
-            $this->_redirect('*/*/');
+
+            foreach ($customerCollection as $customer) {
+                $_birthday = $customer->getDob();// get Customer Date of birth
+                if($_birthday == $date){// check Date of birth equal current date ?
+
+                    $transport = $this->_transportBuilder
+                    ->setTemplateIdentifier('birthdaypromotion_general_email_template') // this code we have mentioned in the email_templates.xml
+                    ->setTemplateOptions($templateOptions)
+                    ->setTemplateVars(['data' => $postObject])
+                    ->setFrom(
+                        // $sender
+                        $this->scopeConfig->getValue(self::EMAIL_SENDER, $storeScope)
+                    )
+                    ->addTo($customer->getEmail())
+                    ->getTransport();
+                
+                    $transport->sendMessage(); 
+                }else{
+                }
+            }
             return;
         } catch (\Exception $e) {
-            $this->inlineTranslation->resume();
             $this->messageManager->addError(
                 __('We can\'t process your request right now. Sorry, that\'s all we know.'.$e->getMessage())
             );
-                $this->_redirect('*/*/');
-                return;
+            return;
         }
     }
 }
