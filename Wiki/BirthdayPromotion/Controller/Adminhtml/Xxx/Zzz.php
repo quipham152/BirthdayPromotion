@@ -1,9 +1,8 @@
 <?php
 namespace Wiki\BirthdayPromotion\Controller\Adminhtml\Xxx;
 
-class Index extends \Magento\Framework\App\Action\Action
+class Zzz extends \Magento\Framework\App\Action\Action
 {
-    const EMAIL_SENDER = 'birthdaypromotion/general/email_sender_to';
     /**
     * @var \Magento\Framework\Mail\Template\TransportBuilder
     */
@@ -69,12 +68,14 @@ class Index extends \Magento\Framework\App\Action\Action
         $this->_escaper = $escaper;
     }
 
-    public function getCustomerCollection()
+    /**
+    * Post user question
+    *
+    * @return void
+    * @throws \Exception
+    */
+    public function execute()
     {
-        return $this->_customerFactory->create();
-    }
-
-    public function generateCoupon($use_per_coupon){
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         $shoppingCartPriceRule = $objectManager->create('Magento\SalesRule\Model\Rule');
 
@@ -86,7 +87,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $coupon['desc'] = '';
         $coupon['start'] = date('Y-m-d');
         $coupon['end'] = date('Y-m-d',mktime(0, 0, 0, date("m")  , date("d") + $valid_date, date("Y")));
-        $coupon['uses_per_coupon'] = $use_per_coupon;
+        $coupon['uses_per_coupon'] = '1';
         $coupon['max_redemptions'] = '1';
         $coupon['discount_type'] = 'by_percent';
         $coupon['discount_amount'] = $discount_amount;
@@ -114,59 +115,5 @@ class Index extends \Magento\Framework\App\Action\Action
                 ->setCouponCode($coupon['code']);
 
         $shoppingCartPriceRule->save();
-
-        return $coupon['code'];
-    }
-    /**
-    * Post user question
-    *
-    * @return void
-    * @throws \Exception
-    */
-    public function execute()
-    {
-        try {
-            
-            $postObject = new \Magento\Framework\DataObject();
-            $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-            $date = $this->_currentdate->gmtDate('Y-m-d');
-            $customerCollection = $this->getCustomerCollection();
-            
-            $error = false;
-
-            $templateOptions = array(
-                'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
-                'store' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
-            );
-
-            $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-            
-            $dobs =  $customerCollection->addFieldToFilter('dob', ['eq' => $date]);
-            $numsDob = count($dobs);
-            $code = $this->generateCoupon($numsDob);
-            foreach ($dobs as $dob) {
-                $transport = $this->_transportBuilder
-                ->setTemplateIdentifier('birthdaypromotion_general_email_template') // this code we have mentioned in the email_templates.xml
-                ->setTemplateOptions($templateOptions)
-                ->setTemplateVars([
-                    'data' => $postObject,
-                    'customer_name'    => $dob->getName(),
-                    'birthday_code'    => $code
-                    ])
-                ->setFrom(
-                    $this->scopeConfig->getValue(self::EMAIL_SENDER, $storeScope)
-                )
-                ->addTo($dob->getEmail())
-                ->getTransport();
-            
-                $transport->sendMessage(); 
-            }
-            return;
-        } catch (\Exception $e) {
-            $this->messageManager->addError(
-                __('We can\'t process your request right now. Sorry, that\'s all we know.'.$e->getMessage())
-            );
-            return;
-        }
     }
 }

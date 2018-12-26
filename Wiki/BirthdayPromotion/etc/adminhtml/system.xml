@@ -19,15 +19,37 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
                 <!-- Email Sender -->
-                <field id="email_sender_to" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="email_sender_to" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Email Sender</label>
                      <source_model>Magento\Config\Model\Config\Source\Email\Identity</source_model>
                 </field>
                 <!-- Email Template -->
-                <field id="email_template" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                <field id="email_template" translate="label comment" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
                     <label>Email Template</label>
                     <comment>Email template chosen based on theme fallback when "Default" option is selected.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Email\Template</source_model>
+                </field>
+            </group>
+
+            <group id="birthday_coupon" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Birthday Coupon</label>
+                 <field id="enable" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="coupon_name" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Coupon Name</label>
+                    <validate>required-entry</validate> 
+                </field>
+                <field id="discount_amount" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Discount Amount</label>
+                    <validate>required-entry validate-number</validate>
+                    <comment>The amount of discounts is calculated as a percentage.</comment>
+                </field>
+                <field id="coupon_valid" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Coupon Valid</label>
+                    <validate>required-entry validate-number</validate>
+                    <comment>Coupon will be valid in X days.</comment>
                 </field>
             </group>
         </section>
